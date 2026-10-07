@@ -20,7 +20,9 @@ export async function route(req: IncomingMessage, res: ServerResponse, app: AppC
     const id = path[1];
     if (method === 'GET' && path.length === 2) return json(res, 200, app.claims.get(id));
     if (method === 'POST' && path[2] === 'evidence' && path[4] === 'review') return json(res, 200, app.claims.reviewEvidence(id, path[3], Boolean(input.accepted), 'api', req.headers['idempotency-key'] as string));
+    if (method === 'POST' && path[2] === 'evidence' && path[4] === 'withdraw') return json(res, 200, app.claims.withdrawEvidence(id, path[3], 'api', req.headers['idempotency-key'] as string));
     if (method === 'POST' && path[2] === 'evidence') return json(res, 201, app.claims.addEvidence(id, input, 'api', req.headers['idempotency-key'] as string));
+    if (method === 'POST' && path[2] === 'adjustments') return json(res, 200, app.claims.approveAdjustment(id, 'api', req.headers['idempotency-key'] as string));
     if (method === 'POST' && path[2] === 'events') return json(res, 200, app.claims.addEvent(id, input.type, input.payload, input.actor ?? 'api', input.idempotencyKey, input.occurredAt));
     if (method === 'POST' && path[2] === 'risk') return json(res, 200, app.risks.assess(id, 'api'));
     if (method === 'GET' && path[2] === 'risk') return json(res, 200, { relatedClaims: app.risks.related(id), state: app.claims.get(id) });
