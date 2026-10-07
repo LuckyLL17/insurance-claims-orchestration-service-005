@@ -1,4 +1,5 @@
 import { ClaimState, RuleSnapshot } from './types';
+import { effectiveEvidence } from './evidence';
 import { newId } from './ids';
 
 export interface RuleDefinition { id: string; version: string; priority: number; enabled: boolean; evaluate: (claim: ClaimState) => string | undefined; }
@@ -12,7 +13,7 @@ export class RuleEngine {
     this.versions.set('2026.10', [
       { id: 'coverage-present', version: '2026.10', priority: 10, enabled: true, evaluate: (c) => c.policy?.coverages.length ? undefined : 'policy has no active coverage' },
       { id: 'large-loss-review', version: '2026.10', priority: 20, enabled: true, evaluate: (c) => c.loss.gross >= 100000 ? 'large loss requires human review' : undefined },
-      { id: 'missing-evidence', version: '2026.10', priority: 30, enabled: true, evaluate: (c) => c.evidence.some((e) => e.reviewed && e.accepted) ? undefined : 'at least one accepted evidence item is required' },
+      { id: 'missing-evidence', version: '2026.10', priority: 30, enabled: true, evaluate: (c) => effectiveEvidence(c.evidence).some((e) => e.reviewed && e.accepted) ? undefined : 'at least one accepted evidence item is required' },
     ]);
   }
 

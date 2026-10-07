@@ -13,6 +13,7 @@ export type ClaimEventType =
   | 'policy.snapshot.created'
   | 'evidence.added'
   | 'evidence.reviewed'
+  | 'evidence.withdrawn'
   | 'survey.assigned'
   | 'survey.completed'
   | 'documents.requested'
@@ -29,7 +30,36 @@ export interface Participant { kind: 'person' | 'vehicle' | 'device' | 'repair_s
 export interface MonetaryAmount { currency: string; minor: number; }
 export interface LossEstimate { currency: string; gross: number; deductible?: number; liabilityShare?: number; cap?: number; }
 export interface PolicyVersion { policyId: string; version: number; effectiveFrom: string; effectiveTo?: string; coverages: string[]; deductibleMinor: number; limitMinor: number; }
-export interface EvidenceRecord { id: string; kind: string; hash: string; version: number; receivedAt: string; reviewed: boolean; accepted?: boolean; source: string; supersedes?: string; }
+export interface EvidenceRecord { id: string; kind: string; hash: string; version: number; receivedAt: string; reviewed: boolean; accepted?: boolean; source: string; supersedes?: string; supersededBy?: string; withdrawn?: boolean; }
+export interface EvidenceBasisItem { evidenceId: string; kind: string; version: number; hash: string; }
+export interface ReviewConclusion {
+  id: string;
+  evidenceId: string;
+  kind: string;
+  evidenceVersion: number;
+  evidenceHash: string;
+  decision: 'accepted' | 'rejected';
+  createdAt: string;
+  actor: string;
+  status: 'active' | 'superseded' | 'invalidated';
+  supersededBy?: string;
+  invalidatedReason?: string;
+}
+export interface RiskResult { score: number; signals: RiskSignal[]; }
+export interface AdjustmentResult { approvedMinor: number; requiredEvidence: string[]; reasons: string[]; }
+export interface ConclusionRecord {
+  id: string;
+  kind: 'risk' | 'adjustment';
+  sequence: number;
+  createdAt: string;
+  actor: string;
+  basis: EvidenceBasisItem[];
+  basisHash: string;
+  result: RiskResult | AdjustmentResult;
+  status: 'active' | 'superseded' | 'invalidated';
+  supersededBy?: string;
+  invalidatedReason?: string;
+}
 export interface PaymentEntry { id: string; kind: 'authorization' | 'settlement' | 'reversal' | 'recovery'; amount: MonetaryAmount; sourceId: string; status: 'pending' | 'posted' | 'voided'; createdAt: string; }
 export interface RuleSnapshot { version: string; frozenAt: string; ruleIds: string[]; }
 export interface RiskSignal { code: string; score: number; explanation: string; participants: string[]; }
@@ -47,6 +77,8 @@ export interface ClaimState {
   policy?: PolicyVersion;
   ruleSnapshot?: RuleSnapshot;
   evidence: EvidenceRecord[];
+  reviews: ReviewConclusion[];
+  conclusions: ConclusionRecord[];
   requiredEvidence: Set<string>;
   completedSurveys: string[];
   pendingDocuments: string[];
